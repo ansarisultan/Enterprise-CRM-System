@@ -240,9 +240,9 @@ Computer Science Engineering Student
 
 MERN Stack Developer
 
-GitHub: https://github.com/yourusername
+GitHub: https://github.com/ansarisultan
 
-LinkedIn: https://linkedin.com/in/yourprofile
+LinkedIn: https://linkedin.com/in/SultanSAnsari
 
 ---
 
