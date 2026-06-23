@@ -1,15 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function CustomCursor() {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const cursorRef = useRef(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(pointer: coarse)').matches) return;
 
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
     const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      window.requestAnimationFrame(() => {
+        if (cursor) {
+          cursor.style.transform = `translate3d(${e.clientX - 8}px, ${e.clientY - 8}px, 0)`;
+        }
+      });
     };
 
     const handleMouseOver = (e) => {
@@ -44,28 +51,29 @@ export default function CustomCursor() {
   if (window.matchMedia('(pointer: coarse)').matches) return null;
 
   return (
-    <>
-      <div
-        className="fixed pointer-events-none z-[9999] transition-transform duration-75"
-        style={{
-          left: position.x - 8,
-          top: position.y - 8,
-          transform: `scale(${isClicking ? 0.7 : isHovering ? 1.3 : 1})`,
-        }}
-      >
-        <div className="relative">
-          <div className={`absolute inset-[-8px] rounded-full bg-primary-500/20 blur-md transition-all duration-300 ${
-            isHovering ? 'opacity-100 blur-xl scale-150' : 'opacity-50'
-          }`} />
-          <div className={`w-4 h-4 rounded-full bg-primary-500 transition-all duration-300 ${
-            isHovering ? 'scale-150' : ''
-          }`}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-1 h-1 rounded-full bg-white/80" />
-            </div>
+    <div
+      ref={cursorRef}
+      className="fixed top-0 left-0 pointer-events-none z-[9999] will-change-transform"
+      style={{
+        transform: 'translate3d(-100px, -100px, 0)',
+      }}
+    >
+      <div className="relative">
+        <div 
+          className={`absolute inset-[-8px] rounded-full bg-primary-500/20 blur-md transition-all duration-300 ${
+            isHovering ? 'opacity-100 blur-xl scale-[1.95]' : 'opacity-50'
+          } ${isClicking ? 'scale-[0.8]' : ''}`} 
+        />
+        <div 
+          className={`w-4 h-4 rounded-full bg-primary-500 transition-all duration-300 ${
+            isHovering ? 'scale-[1.5]' : ''
+          } ${isClicking ? 'scale-[0.8]' : ''}`}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-1 h-1 rounded-full bg-white/80" />
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
