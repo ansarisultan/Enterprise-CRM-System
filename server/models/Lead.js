@@ -1,16 +1,35 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const leadSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String },
-    company: { type: String },
-    status: { type: String, enum: ['New', 'In Progress', 'Closed'], default: 'New' },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    notes: { type: String },
+const leadSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+    trim: true,
   },
-  { timestamps: true }
-);
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    trim: true,
+    lowercase: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+  },
+  phone: {
+    type: String,
+    required: [true, 'Phone is required'],
+    trim: true,
+  },
+  company: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  status: {
+    type: String,
+    enum: ['New', 'Contacted', 'Qualified', 'Won', 'Lost'],
+    default: 'New',
+  },
+}, {
+  timestamps: true,
+});
 
-module.exports = mongoose.model('Lead', leadSchema);
+export default mongoose.model('Lead', leadSchema);

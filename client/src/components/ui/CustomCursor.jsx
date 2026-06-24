@@ -1,24 +1,13 @@
-<<<<<<< HEAD
-import { useState, useEffect } from 'react';
-
-export default function CustomCursor() {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-=======
 import { useState, useEffect, useRef } from 'react';
 
 export default function CustomCursor() {
   const cursorRef = useRef(null);
->>>>>>> temp-fix-branch
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(pointer: coarse)').matches) return;
 
-<<<<<<< HEAD
-    const handleMouseMove = (e) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-=======
     const cursor = cursorRef.current;
     if (!cursor) return;
 
@@ -28,7 +17,6 @@ export default function CustomCursor() {
           cursor.style.transform = `translate3d(${e.clientX - 8}px, ${e.clientY - 8}px, 0)`;
         }
       });
->>>>>>> temp-fix-branch
     };
 
     const handleMouseOver = (e) => {
@@ -63,31 +51,6 @@ export default function CustomCursor() {
   if (window.matchMedia('(pointer: coarse)').matches) return null;
 
   return (
-<<<<<<< HEAD
-    <>
-      <div
-        className="fixed pointer-events-none z-[9999] transition-transform duration-75"
-        style={{
-          left: position.x - 8,
-          top: position.y - 8,
-          transform: `scale(${isClicking ? 0.7 : isHovering ? 1.3 : 1})`,
-        }}
-      >
-        <div className="relative">
-          <div className={`absolute inset-[-8px] rounded-full bg-primary-500/20 blur-md transition-all duration-300 ${
-            isHovering ? 'opacity-100 blur-xl scale-150' : 'opacity-50'
-          }`} />
-          <div className={`w-4 h-4 rounded-full bg-primary-500 transition-all duration-300 ${
-            isHovering ? 'scale-150' : ''
-          }`}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-1 h-1 rounded-full bg-white/80" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-=======
     <div
       ref={cursorRef}
       className="fixed top-0 left-0 pointer-events-none z-[9999] will-change-transform"
@@ -112,6 +75,5 @@ export default function CustomCursor() {
         </div>
       </div>
     </div>
->>>>>>> temp-fix-branch
   );
 }
