@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   Users, 
   UserPlus, 
@@ -8,26 +8,64 @@ import {
   TrendingUp,
   TrendingDown,
   Zap,
-  Sparkles
+  Sparkles,
+  Activity,
+  BarChart3,
+  Layers,
+  ArrowUpRight,
+  ArrowDownRight,
+  Circle,
+  Square,
+  Triangle
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import { leadAPI } from '../services/api';
 import StatusBadge from '../components/leads/StatusBadge';
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
+// 3D Floating Shapes Component
+const FloatingShapes = () => {
+  const shapes = [
+    { Icon: Circle, x: 10, y: 20, size: 12, delay: 0, duration: 8 },
+    { Icon: Square, x: 85, y: 15, size: 10, delay: 2, duration: 6 },
+    { Icon: Triangle, x: 90, y: 80, size: 14, delay: 4, duration: 10 },
+    { Icon: Circle, x: 5, y: 70, size: 8, delay: 1, duration: 7 },
+    { Icon: Square, x: 50, y: 5, size: 6, delay: 3, duration: 9 },
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {shapes.map((shape, idx) => (
+        <div
+          key={idx}
+          className="absolute opacity-[0.03]"
+          style={{
+            left: `${shape.x}%`,
+            top: `${shape.y}%`,
+            animation: `float ${shape.duration}s ease-in-out ${shape.delay}s infinite`,
+          }}
+        >
+          <shape.Icon className={`w-${shape.size} h-${shape.size} text-primary-400`} />
+        </div>
+      ))}
+    </div>
+  );
 };
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
-};
+// Glowing Orb Component
+const GlowingOrb = ({ color, size, x, y, delay }) => (
+  <div
+    className="absolute rounded-full blur-3xl animate-float-slow"
+    style={{
+      width: size,
+      height: size,
+      background: `radial-gradient(circle, ${color}, transparent)`,
+      left: `${x}%`,
+      top: `${y}%`,
+      animationDelay: `${delay}s`,
+      opacity: 0.3,
+    }}
+  />
+);
 
 export default function Dashboard() {
   const [leads, setLeads] = useState([]);
@@ -39,6 +77,9 @@ export default function Dashboard() {
     won: 0,
     lost: 0,
   });
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
 
   useEffect(() => {
     fetchLeads();
@@ -71,45 +112,67 @@ export default function Dashboard() {
       value: stats.total,
       icon: Users,
       color: 'text-primary-400',
-      bg: 'bg-primary-500/10',
-      trend: '+12%',
+      bg: 'from-primary-500/20 to-primary-400/10',
+      trend: '+12.5%',
       trendUp: true,
+      gradient: 'from-primary-500/10 to-primary-400/5',
     },
     {
       title: 'New Leads',
       value: stats.new,
       icon: UserPlus,
       color: 'text-blue-400',
-      bg: 'bg-blue-500/10',
-      trend: '+8%',
+      bg: 'from-blue-500/20 to-blue-400/10',
+      trend: '+8.3%',
       trendUp: true,
+      gradient: 'from-blue-500/10 to-blue-400/5',
     },
     {
       title: 'Won Deals',
       value: stats.won,
       icon: UserCheck,
       color: 'text-green-400',
-      bg: 'bg-green-500/10',
-      trend: '+23%',
+      bg: 'from-green-500/20 to-green-400/10',
+      trend: '+23.1%',
       trendUp: true,
+      gradient: 'from-green-500/10 to-green-400/5',
     },
     {
       title: 'Lost Deals',
       value: stats.lost,
       icon: UserX,
       color: 'text-red-400',
-      bg: 'bg-red-500/10',
-      trend: '-5%',
+      bg: 'from-red-500/20 to-red-400/10',
+      trend: '-4.8%',
       trendUp: false,
+      gradient: 'from-red-500/10 to-red-400/5',
     },
   ];
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0 },
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Loading dashboard...</p>
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin mx-auto" />
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-primary-500/10 animate-ping mx-auto" />
+          </div>
+          <p className="text-slate-400 mt-4">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -117,60 +180,140 @@ export default function Dashboard() {
 
   return (
     <motion.div
+      ref={containerRef}
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-8"
+      className="space-y-8 relative"
     >
-      {/* Welcome Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Welcome back! 👋</h2>
-          <p className="text-slate-400 mt-1">Here's what's happening with your leads today.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400">Last updated: Today</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-        </div>
-      </div>
+      {/* Dynamic Background Elements */}
+      <GlowingOrb color="rgba(59,130,246,0.3)" size="600px" x={-10} y={-10} delay={0} />
+      <GlowingOrb color="rgba(96,165,250,0.2)" size="400px" x={80} y={20} delay={2} />
+      <GlowingOrb color="rgba(59,130,246,0.15)" size="300px" x={40} y={70} delay={4} />
+      <FloatingShapes />
 
-      {/* Stats Cards */}
+      {/* Welcome Section */}
+      <motion.div variants={item} className="relative">
+        <div className="glass-premium p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl animate-float-slow" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary-500/5 rounded-full blur-3xl animate-float-medium" style={{ animationDelay: '-2s' }} />
+          
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white">
+                Welcome back, Sultan! 👋
+              </h1>
+              <p className="text-slate-400 mt-1 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary-400" />
+                Here's what's happening with your leads today
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs text-slate-400">System Online</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">Last updated: Today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats Cards - 3D Premium */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
           <motion.div key={idx} variants={item}>
-            <GlassCard className="relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+            <div className="stat-3d group">
+              <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.bg} rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:opacity-100 transition duration-500`} />
+              
               <div className="relative flex items-start justify-between">
                 <div>
-                  <p className="stat-label">{stat.title}</p>
-                  <p className="stat-number mt-1">{stat.value}</p>
+                  <p className="stat-label text-slate-400 text-sm font-medium">{stat.title}</p>
+                  <p className="text-4xl font-bold text-white mt-2 tracking-tight">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.bg}`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-4">
-                <span className={`text-xs font-medium ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
+              
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
+                <span className={`text-sm font-medium ${stat.trendUp ? 'text-green-400' : 'text-red-400'}`}>
                   {stat.trend}
                 </span>
                 {stat.trendUp ? (
-                  <TrendingUp className="w-3 h-3 text-green-400" />
+                  <ArrowUpRight className="w-4 h-4 text-green-400" />
                 ) : (
-                  <TrendingDown className="w-3 h-3 text-red-400" />
+                  <ArrowDownRight className="w-4 h-4 text-red-400" />
                 )}
-                <span className="text-xs text-slate-400">vs last month</span>
+                <span className="text-xs text-slate-400 ml-1">vs last month</span>
               </div>
-            </GlassCard>
+
+              {/* Progress Bar */}
+              <div className="mt-4 h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full bg-gradient-to-r ${stat.gradient} rounded-full transition-all duration-1000`}
+                  style={{ width: `${Math.min((stat.value / 1000) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Recent Leads Preview */}
+      {/* Activity Chart Placeholder */}
       <motion.div variants={item}>
-        <GlassCard>
-          <div className="flex items-center justify-between mb-4">
+        <div className="glass-premium p-6">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-lg font-semibold text-white">Recent Leads</h3>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary-400" />
+                Lead Activity
+              </h3>
+              <p className="text-sm text-slate-400">Weekly lead distribution</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-white/5 hover:bg-white/10 transition text-slate-400 hover:text-white">
+                Week
+              </button>
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-primary-500/20 text-primary-400 border border-primary-500/20">
+                Month
+              </button>
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-white/5 hover:bg-white/10 transition text-slate-400 hover:text-white">
+                Year
+              </button>
+            </div>
+          </div>
+
+          {/* Simple bar chart */}
+          <div className="flex items-end justify-between h-32 gap-2">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+              const heights = [45, 65, 35, 80, 55, 30, 40];
+              const height = heights[idx];
+              return (
+                <div key={day} className="flex-1 flex flex-col items-center gap-2 group">
+                  <div 
+                    className="w-full bg-gradient-to-t from-primary-500/30 to-primary-400/20 rounded-lg transition-all duration-500 group-hover:from-primary-500/50 group-hover:to-primary-400/30"
+                    style={{ height: `${height}%` }}
+                  />
+                  <span className="text-xs text-slate-500">{day}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Recent Leads */}
+      <motion.div variants={item}>
+        <div className="glass-premium p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary-400" />
+                Recent Leads
+              </h3>
               <p className="text-sm text-slate-400">Your latest 5 leads</p>
             </div>
             <button className="text-sm text-primary-400 hover:text-primary-300 transition flex items-center gap-1">
@@ -178,39 +321,62 @@ export default function Dashboard() {
               <Sparkles className="w-3 h-3" />
             </button>
           </div>
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="text-xs text-slate-400 border-b border-white/5">
-                  <th className="text-left py-3 px-2 font-medium">Name</th>
-                  <th className="text-left py-3 px-2 font-medium">Email</th>
-                  <th className="text-left py-3 px-2 font-medium">Company</th>
-                  <th className="text-left py-3 px-2 font-medium">Status</th>
+                  <th className="text-left py-3 px-3 font-medium">Lead</th>
+                  <th className="text-left py-3 px-3 font-medium">Email</th>
+                  <th className="text-left py-3 px-3 font-medium">Company</th>
+                  <th className="text-left py-3 px-3 font-medium">Status</th>
+                  <th className="text-right py-3 px-3 font-medium">Date</th>
                 </tr>
               </thead>
               <tbody>
-                {leads.slice(0, 5).map((lead) => (
-                  <tr key={lead._id} className="border-b border-white/5 hover:bg-white/5 transition">
-                    <td className="py-3 px-2 text-sm text-white">{lead.name}</td>
-                    <td className="py-3 px-2 text-sm text-slate-300">{lead.email}</td>
-                    <td className="py-3 px-2 text-sm text-slate-300">{lead.company || '-'}</td>
-                    <td className="py-3 px-2">
+                {leads.slice(0, 5).map((lead, idx) => (
+                  <motion.tr
+                    key={lead._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="border-b border-white/5 hover:bg-white/5 transition group"
+                  >
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500/20 to-primary-400/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-primary-400">
+                            {lead.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm text-white group-hover:text-primary-400 transition">
+                          {lead.name}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-sm text-slate-300">{lead.email}</td>
+                    <td className="py-3 px-3 text-sm text-slate-300">{lead.company || '-'}</td>
+                    <td className="py-3 px-3">
                       <StatusBadge status={lead.status} />
                     </td>
-                  </tr>
+                    <td className="py-3 px-3 text-right text-xs text-slate-500">
+                      {new Date(lead.createdAt).toLocaleDateString()}
+                    </td>
+                  </motion.tr>
                 ))}
                 {leads.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="text-center py-8 text-slate-400">
-                      <Zap className="w-8 h-8 mx-auto mb-2 text-slate-500" />
-                      No leads yet. Start by adding your first lead!
+                    <td colSpan="5" className="text-center py-12 text-slate-400">
+                      <Zap className="w-12 h-12 mx-auto mb-3 text-slate-500" />
+                      <p className="text-lg font-medium">No leads yet</p>
+                      <p className="text-sm mt-1">Start by adding your first lead</p>
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </GlassCard>
+        </div>
       </motion.div>
     </motion.div>
   );
