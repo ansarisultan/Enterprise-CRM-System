@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/layout/Navbar';
@@ -23,12 +23,14 @@ const PageLoader = () => (
 );
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <BrowserRouter>
       <div className="flex h-screen overflow-hidden bg-dark-900">
-        <Sidebar />
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         <div className="flex-1 flex flex-col min-w-0">
-          <Navbar />
+          <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
           <main className="flex-1 overflow-y-auto p-6 lg:p-8">
             <Suspense fallback={<PageLoader />}>
               <Routes>
