@@ -270,6 +270,11 @@ export default function Dashboard() {
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                   <span className="text-xs font-semibold">Demo Mode (Offline)</span>
                 </div>
+              ) : dbStatus.hasError ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-xs font-semibold">Database Error (500)</span>
+                </div>
               ) : (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />

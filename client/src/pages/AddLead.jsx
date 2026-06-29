@@ -56,7 +56,8 @@ export default function AddLead() {
       navigate('/leads');
     } catch (error) {
       console.error('Error creating lead:', error);
-      toast.error('Failed to create lead');
+      const errMsg = error.response?.data?.message || 'Failed to create lead';
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

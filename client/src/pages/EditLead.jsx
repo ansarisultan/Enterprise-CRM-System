@@ -74,7 +74,8 @@ export default function EditLead() {
       navigate('/leads');
     } catch (error) {
       console.error('Error updating lead:', error);
-      toast.error('Failed to update lead');
+      const errMsg = error.response?.data?.message || 'Failed to update lead';
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

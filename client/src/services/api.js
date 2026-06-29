@@ -73,20 +73,27 @@ const saveLocalLeads = (leads) => {
 };
 
 let isUsingMockData = false;
+let hasDbError = false;
 
 // Safe API wrapper that falls back to LocalStorage if network is down
 const handleRequest = async (apiCall, fallbackFn) => {
   try {
     const res = await apiCall();
     isUsingMockData = false;
+    hasDbError = false;
     return res;
   } catch (error) {
     // If it's a network error (server offline), fallback
     if (!error.response) {
       console.warn('API Server offline. Falling back to LocalStorage mock database.', error);
       isUsingMockData = true;
+      hasDbError = false;
       const data = fallbackFn();
       return { data };
+    }
+    // If the API responded, but with a server error (e.g. 500), it's likely a database connection/operation issue on the backend.
+    if (error.response.status >= 500) {
+      hasDbError = true;
     }
     throw error;
   }
@@ -94,6 +101,7 @@ const handleRequest = async (apiCall, fallbackFn) => {
 
 export const getDbStatus = () => ({
   isOffline: isUsingMockData,
+  hasError: hasDbError,
   apiUrl: API_URL
 });
 
