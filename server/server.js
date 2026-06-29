@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://crm43.vercel.app',
   process.env.CORS_ORIGIN
 ].filter(Boolean);
 
@@ -21,13 +22,22 @@ app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
+    
+    // Check if origin is directly whitelisted
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+    
     // Dynamically allow any local development server
     if (origin.startsWith('http://localhost:')) {
       return callback(null, true);
     }
+    
+    // Dynamically allow Vercel subdomains (for preview/production deploys)
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
