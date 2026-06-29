@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+let rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Automatically ensure the API URL ends with /api to prevent 404 routing errors
+if (rawApiUrl && !rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
+  rawApiUrl = rawApiUrl.endsWith('/') ? `${rawApiUrl}api` : `${rawApiUrl}/api`;
+}
+const API_URL = rawApiUrl;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -91,8 +96,8 @@ const handleRequest = async (apiCall, fallbackFn) => {
       const data = fallbackFn();
       return { data };
     }
-    // If the API responded, but with a server error (e.g. 500), it's likely a database connection/operation issue on the backend.
-    if (error.response.status >= 500) {
+    // If the API responded with an error, set hasDbError to true (unless it is a 400 Bad Request which is usually client validation)
+    if (error.response.status !== 400) {
       hasDbError = true;
     }
     throw error;
