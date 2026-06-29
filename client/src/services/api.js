@@ -72,20 +72,30 @@ const saveLocalLeads = (leads) => {
   localStorage.setItem('leadflow_leads', JSON.stringify(leads));
 };
 
+let isUsingMockData = false;
+
 // Safe API wrapper that falls back to LocalStorage if network is down
 const handleRequest = async (apiCall, fallbackFn) => {
   try {
-    return await apiCall();
+    const res = await apiCall();
+    isUsingMockData = false;
+    return res;
   } catch (error) {
     // If it's a network error (server offline), fallback
     if (!error.response) {
       console.warn('API Server offline. Falling back to LocalStorage mock database.', error);
+      isUsingMockData = true;
       const data = fallbackFn();
       return { data };
     }
     throw error;
   }
 };
+
+export const getDbStatus = () => ({
+  isOffline: isUsingMockData,
+  apiUrl: API_URL
+});
 
 export const leadAPI = {
   getAll: () => handleRequest(

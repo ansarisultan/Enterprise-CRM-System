@@ -19,7 +19,7 @@ import {
   Triangle
 } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
-import { leadAPI } from '../services/api';
+import { leadAPI, getDbStatus } from '../services/api';
 import StatusBadge from '../components/leads/StatusBadge';
 
 // 3D Floating Shapes Component
@@ -77,6 +77,7 @@ export default function Dashboard() {
     won: 0,
     lost: 0,
   });
+  const [dbStatus, setDbStatus] = useState({ isOffline: false, apiUrl: '' });
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
@@ -90,6 +91,7 @@ export default function Dashboard() {
       const response = await leadAPI.getAll();
       const data = response.data;
       setLeads(data);
+      setDbStatus(getDbStatus());
 
       const stats = {
         total: data.length,
@@ -101,9 +103,63 @@ export default function Dashboard() {
       setStats(stats);
     } catch (error) {
       console.error('Error fetching leads:', error);
+      setDbStatus(getDbStatus());
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateTrend = (leadsList, filterFn = () => true) => {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    const filtered = leadsList.filter(filterFn);
+    const recent = filtered.filter(l => new Date(l.createdAt) >= sevenDaysAgo).length;
+    const previous = filtered.filter(l => {
+      const d = new Date(l.createdAt);
+      return d >= fourteenDaysAgo && d < sevenDaysAgo;
+    }).length;
+
+    if (previous > 0) {
+      const diff = ((recent - previous) / previous) * 100;
+      return {
+        trend: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`,
+        trendUp: diff >= 0
+      };
+    } else if (recent > 0) {
+      return {
+        trend: `+${recent} new`,
+        trendUp: true
+      };
+    }
+    return {
+      trend: '0%',
+      trendUp: true
+    };
+  };
+
+  const totalTrend = calculateTrend(leads);
+  const newTrend = calculateTrend(leads, l => l.status === 'New');
+  const wonTrend = calculateTrend(leads, l => l.status === 'Won');
+  const lostTrend = calculateTrend(leads, l => l.status === 'Lost');
+
+  const getWeeklyActivity = () => {
+    const dayCounts = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    leads.forEach(lead => {
+      if (lead.createdAt) {
+        const dayName = new Date(lead.createdAt).toLocaleDateString('en-US', { weekday: 'short' });
+        if (dayCounts[dayName] !== undefined) {
+          dayCounts[dayName]++;
+        }
+      }
+    });
+    const maxCount = Math.max(...Object.values(dayCounts), 1);
+    return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+      day,
+      count: dayCounts[day],
+      height: Math.max(10, (dayCounts[day] / maxCount) * 100)
+    }));
   };
 
   const statCards = [
@@ -113,8 +169,8 @@ export default function Dashboard() {
       icon: Users,
       color: 'text-primary-400',
       bg: 'from-primary-500/20 to-primary-400/10',
-      trend: '+12.5%',
-      trendUp: true,
+      trend: totalTrend.trend,
+      trendUp: totalTrend.trendUp,
       gradient: 'from-primary-500/10 to-primary-400/5',
     },
     {
@@ -123,8 +179,8 @@ export default function Dashboard() {
       icon: UserPlus,
       color: 'text-blue-400',
       bg: 'from-blue-500/20 to-blue-400/10',
-      trend: '+8.3%',
-      trendUp: true,
+      trend: newTrend.trend,
+      trendUp: newTrend.trendUp,
       gradient: 'from-blue-500/10 to-blue-400/5',
     },
     {
@@ -133,8 +189,8 @@ export default function Dashboard() {
       icon: UserCheck,
       color: 'text-green-400',
       bg: 'from-green-500/20 to-green-400/10',
-      trend: '+23.1%',
-      trendUp: true,
+      trend: wonTrend.trend,
+      trendUp: wonTrend.trendUp,
       gradient: 'from-green-500/10 to-green-400/5',
     },
     {
@@ -143,8 +199,8 @@ export default function Dashboard() {
       icon: UserX,
       color: 'text-red-400',
       bg: 'from-red-500/20 to-red-400/10',
-      trend: '-4.8%',
-      trendUp: false,
+      trend: lostTrend.trend,
+      trendUp: lostTrend.trendUp,
       gradient: 'from-red-500/10 to-red-400/5',
     },
   ];
@@ -208,13 +264,21 @@ export default function Dashboard() {
                 Here's what's happening with your leads today
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs text-slate-400">System Online</span>
-              </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              {dbStatus.isOffline ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-xs font-semibold">Demo Mode (Offline)</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-xs font-semibold">Connected to MongoDB</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500">Last updated: Today</span>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">API URL:</span>
+                <code className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded border border-white/5">{dbStatus.apiUrl || 'http://localhost:5000/api'}</code>
               </div>
             </div>
           </div>
@@ -288,19 +352,20 @@ export default function Dashboard() {
 
           {/* Simple bar chart */}
           <div className="flex items-end justify-between h-32 gap-2">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
-              const heights = [45, 65, 35, 80, 55, 30, 40];
-              const height = heights[idx];
-              return (
-                <div key={day} className="flex-1 flex flex-col items-center gap-2 group">
+            {getWeeklyActivity().map(({ day, count, height }) => (
+              <div key={day} className="flex-1 flex flex-col items-center gap-2 group">
+                <div className="relative w-full flex flex-col items-center justify-end h-full">
+                  <div className="absolute bottom-full mb-2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap shadow-xl border border-white/10 font-medium">
+                    {count} {count === 1 ? 'lead' : 'leads'}
+                  </div>
                   <div 
                     className="w-full bg-gradient-to-t from-primary-500/30 to-primary-400/20 rounded-lg transition-all duration-500 group-hover:from-primary-500/50 group-hover:to-primary-400/30"
                     style={{ height: `${height}%` }}
                   />
-                  <span className="text-xs text-slate-500">{day}</span>
                 </div>
-              );
-            })}
+                <span className="text-xs text-slate-500">{day}</span>
+              </div>
+            ))}
           </div>
         </div>
       </motion.div>
