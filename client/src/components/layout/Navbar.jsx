@@ -16,6 +16,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { leadAPI } from '../../services/api';
 import { exportToCSV } from '../../utils/exportUtils';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const MENU_OPTIONS = [
@@ -25,6 +26,7 @@ const MENU_OPTIONS = [
 ];
 
 export default function Navbar({ onMenuClick }) {
+  const { isAuthenticated, logout } = useAuth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [leads, setLeads] = useState([]);
@@ -103,7 +105,7 @@ export default function Navbar({ onMenuClick }) {
   );
 
   const mockNotifications = [
-    { id: 1, title: 'Database Connected', desc: 'Secure connection established to MongoDB Atlas cluster.', time: 'Just now', type: 'info' },
+    { id: 1, title: 'Database Connected', desc: 'Secure connection established to database cluster.', time: 'Just now', type: 'info' },
     { id: 2, title: 'New Lead Added', desc: 'Sarah Jenkins has been added as a Won lead.', time: '2 hours ago', type: 'success' },
     { id: 3, title: 'System Online', desc: 'CRM services operational.', time: 'Today', type: 'info' }
   ];
@@ -120,8 +122,10 @@ export default function Navbar({ onMenuClick }) {
   };
 
   const handleLogout = () => {
+    logout();
     toast.success('Logged out successfully! Goodbye.');
     setIsProfileOpen(false);
+    navigate('/login');
   };
 
   return (
@@ -344,7 +348,7 @@ export default function Navbar({ onMenuClick }) {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-white/5 transition border border-white/5 group"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-400 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.2)] ${isAuthenticated ? 'bg-gradient-to-br from-primary-500 to-primary-400' : 'bg-slate-700'}`}>
               <User className="w-4 h-4 text-white" />
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-white transition" />
@@ -353,36 +357,55 @@ export default function Navbar({ onMenuClick }) {
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#0a0f24]/95 border border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden z-50 animate-scale-in">
               <div className="p-4 border-b border-white/5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-400 flex items-center justify-center flex-shrink-0">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isAuthenticated ? 'bg-gradient-to-br from-primary-500 to-primary-400' : 'bg-slate-700'}`}>
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-white truncate">Sultan Ansari</p>
-                  <p className="text-xs text-slate-400 truncate">sultan@enterprise.com</p>
+                  <p className="text-sm font-bold text-white truncate">
+                    {isAuthenticated ? 'Sultan Ansari' : 'Guest User'}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {isAuthenticated ? 'sultan@enterprise.com' : 'ReadOnly mode'}
+                  </p>
                 </div>
               </div>
               <div className="p-1.5 space-y-1">
-                <button 
-                  onClick={() => setIsProfileOpen(false)}
-                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-2.5 text-sm text-white"
-                >
-                  <Settings className="w-4 h-4 text-slate-400" />
-                  Profile Settings
-                </button>
-                <button 
-                  onClick={() => setIsProfileOpen(false)}
-                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-2.5 text-sm text-white"
-                >
-                  <Shield className="w-4 h-4 text-slate-400" />
-                  Security Details
-                </button>
-                <button 
-                  onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition flex items-center gap-2.5 text-sm text-red-200 border-t border-white/5 pt-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
+                {isAuthenticated ? (
+                  <>
+                    <button 
+                      onClick={() => setIsProfileOpen(false)}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-2.5 text-sm text-white"
+                    >
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      Profile Settings
+                    </button>
+                    <button 
+                      onClick={() => setIsProfileOpen(false)}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 transition flex items-center gap-2.5 text-sm text-white"
+                    >
+                      <Shield className="w-4 h-4 text-slate-400" />
+                      Security Details
+                    </button>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition flex items-center gap-2.5 text-sm text-red-200 border-t border-white/5 pt-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      navigate('/login');
+                      setIsProfileOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/5 text-primary-400 transition flex items-center gap-2.5 text-sm font-medium"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Sign In as Admin
+                  </button>
+                )}
               </div>
             </div>
           )}

@@ -278,13 +278,9 @@ export default function Dashboard() {
               ) : (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-xs font-semibold">Connected to MongoDB</span>
+                  <span className="text-xs font-semibold">Connected to Database</span>
                 </div>
               )}
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">API URL:</span>
-                <code className="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded border border-white/5">{dbStatus.apiUrl || 'http://localhost:5000/api'}</code>
-              </div>
             </div>
           </div>
         </div>

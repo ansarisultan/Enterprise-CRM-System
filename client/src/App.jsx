@@ -1,14 +1,24 @@
 import React, { Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import CustomCursor from './components/ui/CustomCursor';
+import { useAuth } from './context/AuthContext';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Leads = React.lazy(() => import('./pages/Leads'));
 const AddLead = React.lazy(() => import('./pages/AddLead'));
 const EditLead = React.lazy(() => import('./pages/EditLead'));
+const Login = React.lazy(() => import('./pages/Login'));
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
 
 const PageLoader = () => (
   <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
@@ -35,9 +45,24 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/leads" element={<Leads />} />
-                <Route path="/leads/add" element={<AddLead />} />
-                <Route path="/leads/edit/:id" element={<EditLead />} />
+                <Route 
+                  path="/leads/add" 
+                  element={
+                    <ProtectedRoute>
+                      <AddLead />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/leads/edit/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <EditLead />
+                    </ProtectedRoute>
+                  } 
+                />
               </Routes>
             </Suspense>
           </main>

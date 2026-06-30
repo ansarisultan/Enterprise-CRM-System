@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import leadRoutes from './routes/leadRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
 
 // Health check
@@ -72,9 +74,9 @@ app.use((req, res) => {
 });
 
 // Connect to MongoDB and start server
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/enterprise-crm')
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to Database');
     app.listen(PORT, () => {
       console.log(`🚀 LeadFlow Backend running on port ${PORT}`);
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -82,7 +84,7 @@ mongoose.connect(process.env.MONGODB_URI)
     });
   })
   .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('❌ Database connection error:', error);
     process.exit(1);
   });
 

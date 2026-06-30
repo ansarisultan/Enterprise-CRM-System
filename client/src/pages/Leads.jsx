@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
   Plus, 
   Search, 
@@ -25,6 +26,8 @@ import toast from 'react-hot-toast';
 const statusOptions = ['All', 'New', 'Contacted', 'Qualified', 'Won', 'Lost'];
 
 export default function Leads() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,6 +53,11 @@ export default function Leads() {
   };
 
   const handleDelete = async (id) => {
+    if (!isAuthenticated) {
+      toast.error('Admin authentication required to delete leads');
+      navigate('/login');
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this lead?')) {
       try {
         await leadAPI.delete(id);
@@ -63,6 +71,11 @@ export default function Leads() {
   };
 
   const handleBulkDelete = async () => {
+    if (!isAuthenticated) {
+      toast.error('Admin authentication required to delete leads');
+      navigate('/login');
+      return;
+    }
     if (selectedLeads.length === 0) {
       toast.error('Please select leads to delete');
       return;

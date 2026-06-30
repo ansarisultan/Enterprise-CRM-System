@@ -28,12 +28,12 @@ mongoose.connect(mongoUri, {
   useUnifiedTopology: true
 })
   .then(() => {
-    console.log('Connected to MongoDB Atlas');
+    console.log('Connected to Database');
     app.listen(port, () => {
       console.log(`Server listening on http://localhost:${port}`);
     });
   })
   .catch(error => {
-    console.error('MongoDB connection error:', error);
+    console.error('Database connection error:', error);
     process.exit(1);
   });

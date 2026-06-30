@@ -1,5 +1,6 @@
 import express from 'express';
 import Lead from '../models/Lead.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/leads - Create new lead
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { name, email, phone, company, status } = req.body;
     
@@ -60,7 +61,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/leads/:id - Update lead
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { name, email, phone, company, status } = req.body;
     
@@ -103,7 +104,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/leads/:id - Delete lead
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const lead = await Lead.findByIdAndDelete(req.params.id);
     if (!lead) {
