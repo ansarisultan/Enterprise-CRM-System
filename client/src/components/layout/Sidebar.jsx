@@ -3,11 +3,14 @@ import {
   LayoutDashboard, 
   Users, 
   Plus, 
-  Settings, 
-  HelpCircle,
+  FileJson, 
+  FileSpreadsheet,
   Zap,
   X
 } from 'lucide-react';
+import { leadAPI } from '../../services/api';
+import { exportToJSON, exportToCSV } from '../../utils/exportUtils';
+import toast from 'react-hot-toast';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,6 +19,26 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const handleExportJSON = async () => {
+    try {
+      const response = await leadAPI.getAll();
+      exportToJSON(response.data);
+    } catch (error) {
+      console.error('Error fetching leads for JSON export:', error);
+      toast.error('Failed to retrieve leads for JSON export.');
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await leadAPI.getAll();
+      exportToCSV(response.data);
+    } catch (error) {
+      console.error('Error fetching leads for CSV export:', error);
+      toast.error('Failed to retrieve leads for CSV export.');
+    }
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -79,13 +102,19 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Bottom */}
         <div className="space-y-1 pt-4 border-t border-white/5 relative">
-          <button className="sidebar-3d w-full text-left">
-            <Settings className="w-4 h-4" />
-            Settings
+          <button 
+            onClick={handleExportJSON}
+            className="sidebar-3d w-full text-left flex items-center gap-3"
+          >
+            <FileJson className="w-4 h-4 text-blue-400" />
+            <span>Export to JSON</span>
           </button>
-          <button className="sidebar-3d w-full text-left">
-            <HelpCircle className="w-4 h-4" />
-            Help
+          <button 
+            onClick={handleExportCSV}
+            className="sidebar-3d w-full text-left flex items-center gap-3"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-green-400" />
+            <span>Export to CSV</span>
           </button>
         </div>
       </aside>

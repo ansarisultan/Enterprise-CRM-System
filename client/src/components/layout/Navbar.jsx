@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { leadAPI } from '../../services/api';
+import { exportToCSV } from '../../utils/exportUtils';
 import toast from 'react-hot-toast';
 
 const MENU_OPTIONS = [
@@ -107,9 +108,15 @@ export default function Navbar({ onMenuClick }) {
     { id: 3, title: 'System Online', desc: 'CRM services operational.', time: 'Today', type: 'info' }
   ];
 
-  const handleExportCSV = () => {
-    toast.success('Leads list exported to CSV! 📊');
+  const handleExportCSV = async () => {
     setIsQuickActionsOpen(false);
+    try {
+      const response = await leadAPI.getAll();
+      exportToCSV(response.data);
+    } catch (error) {
+      console.error('Error fetching leads for CSV export in navbar:', error);
+      toast.error('Failed to retrieve leads for CSV export.');
+    }
   };
 
   const handleLogout = () => {

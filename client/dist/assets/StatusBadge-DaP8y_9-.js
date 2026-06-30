@@ -1,1 +1,0 @@
-import{j as e}from"./index-BVcNlpHc.js";const t={New:"badge-new",Contacted:"badge-contacted",Qualified:"badge-qualified",Won:"badge-won",Lost:"badge-lost"};function n({status:a}){return e.jsx("span",{className:t[a]||"badge",children:a})}export{n as S};
